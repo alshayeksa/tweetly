@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: x-content-curator
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SUPABASE_DATABASE_URL
+        sync: false   # Set manually in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false   # Set manually in Render dashboard
+      - key: X_CLIENT_ID
+        sync: false   # Optional - for X posting
+      - key: X_CLIENT_SECRET
+        sync: false   # Optional - for X posting
+      - key: GOOGLE_API_KEY
+        sync: false   # Optional - for image search
+      - key: GOOGLE_CSE_ID
+        sync: false   # Optional - for image search

@@ -1,0 +1,171 @@
+ابنِ لي Web App كامل (MVP) لإدارة صناعة تغريدات ونشرها على X بعد اعتماد يدوي.
+
+# اسم المشروع
+X Content Curator (MVP)
+
+# الهدف (Workflow)
+1) المستخدم يكتب "موضوع/عنوان" + اختيار لغة (عربي/إنجليزي) + نبرة (احترافي/سعودي/مضحك/مختصر) + كلمات مفتاحية + هاشتاقات اختيارية.
+2) النظام يجلب "مصادر/نتائج" (Links + مقتطفات) عبر مزود بحث (SerpAPI أو Tavily أو أي Search API) ثم يعطيها للذكاء الاصطناعي لتوليد 5–10 اقتراحات تغريدات.
+3) يعرض الاقتراحات في لوحة "مقترحات" مع: النص، عدد الأحرف، درجة الملاءمة للموضوع، وتحذير إذا تجاوز طول X.
+4) المستخدم يحرر النص ويضغط "اعتماد".
+5) بعد الاعتماد، المستخدم يضغط "نشر الآن" أو "جدولة" (اختياري في MVP: نشر الآن فقط).
+6) النشر يتم عبر X API (OAuth2) على حساب المستخدم.
+7) حفظ سجل كامل: ما تم توليده، ما تم اعتماده، وما تم نشره + رد X (tweet id).
+
+# قيود مهمة
+- لا يتم نشر أي شيء بدون زر اعتماد صريح من المستخدم.
+- أضف “زر إيقاف/تعطيل النشر” per account.
+- احترم سياسات X: لا سبام، لا نشر متكرر، لا ردود آلية جماعية.
+
+# التقنية المطلوبة
+- Frontend: Next.js (App Router) + TypeScript + Tailwind
+- Auth + DB: Supabase
+- Backend: Next.js Route Handlers (server actions أو /api routes)
+- AI: OpenAI API (أو مزود LLM قابل للتبديل)
+- Search: Tavily أو SerpAPI (قابل للتبديل)
+- X Posting: X API (OAuth2 user context)
+
+# الصفحات (UI)
+1) /login
+   - تسجيل دخول Supabase (email/password أو magic link).
+2) /dashboard
+   - إحصائيات سريعة: عدد المواضيع، المقترحات، المنشور.
+   - زر “موضوع جديد”.
+3) /topics/new
+   - نموذج: Title/Topic, language, tone, keywords, hashtags, audience, maxTweets (5-10)
+   - زر “Generate”
+4) /topics/[id]
+   Tabs:
+   - Suggestions: قائمة الاقتراحات (Card) + عداد أحرف + زر Edit + زر Approve
+   - Approved: قائمة المعتمد + زر Publish
+   - Published: قائمة المنشور + رابط للتغريدة
+5) /settings/x
+   - ربط حساب X (Connect) عبر OAuth2
+   - عرض حالة الاتصال
+   - زر تعطيل النشر
+
+# قاعدة البيانات (Supabase) — أنشئ الجداول التالية
+## profiles
+- id (uuid, pk, references auth.users)
+- full_name text
+- created_at timestamptz default now()
+
+## x_accounts
+- id uuid pk default gen_random_uuid()
+- user_id uuid references profiles(id)
+- x_user_id text
+- screen_name text
+- access_token text (encrypted/secure storage)
+- refresh_token text
+- token_expires_at timestamptz
+- is_enabled boolean default true
+- created_at timestamptz default now()
+
+## topics
+- id uuid pk default gen_random_uuid()
+- user_id uuid references profiles(id)
+- title text not null
+- language text default 'ar'
+- tone text default 'saudi'
+- keywords text
+- hashtags text
+- status text default 'draft'  -- draft/generated
+- created_at timestamptz default now()
+
+## sources
+- id uuid pk default gen_random_uuid()
+- topic_id uuid references topics(id) on delete cascade
+- url text
+- title text
+- snippet text
+- created_at timestamptz default now()
+
+## suggestions
+- id uuid pk default gen_random_uuid()
+- topic_id uuid references topics(id) on delete cascade
+- content text not null
+- char_count int
+- score numeric default 0
+- status text default 'suggested'  -- suggested/approved/rejected/published
+- edited_content text
+- created_at timestamptz default now()
+
+## publishes
+- id uuid pk default gen_random_uuid()
+- suggestion_id uuid references suggestions(id) on delete cascade
+- x_account_id uuid references x_accounts(id)
+- tweet_id text
+- published_at timestamptz default now()
+- response_json jsonb
+
+# سياسات RLS
+فعّل RLS على كل الجداول واجعل الوصول مقصور على user_id المطابق.
+- profiles: user can read/update self
+- topics/sources/suggestions: user can CRUD فقط لبياناته
+- x_accounts: user can CRUD self
+
+# API Endpoints (Next.js route handlers)
+1) POST /api/generate
+   input: topic fields
+   steps:
+   - save topic
+   - call Search API to fetch 5-10 sources
+   - save sources
+   - call LLM to generate suggestions (5-10) مع الالتزام بطول X
+   - save suggestions with char_count
+   output: topic id + suggestions
+
+2) POST /api/suggestions/[id]/approve
+   - sets status=approved and stores edited_content if provided
+
+3) POST /api/publish
+   input: suggestion_id
+   steps:
+   - verify user owns suggestion and x_account enabled
+   - post to X API (tweet create)
+   - save publishes row + update suggestion status=published
+   output: tweet link
+
+4) GET /api/topics/[id]
+   - returns topic + sources + suggestions + publishes
+
+# الذكاء الاصطناعي (Prompting)
+- أعطِ LLM: topic + language + tone + keywords + hashtags + مصادر (snippets)
+- اطلب منه:
+  - 5 إلى 10 تغريدات مختلفة
+  - لا تتجاوز 280 حرف (أو 260 لتفادي اختلافات)
+  - لا تكرر نفس الصياغة
+  - اجعلها طبيعية وبشرية وبلهجة سعودية إذا tone=saudi
+  - أضف هاشتاق واحد أو اثنين فقط إذا وُجدت hashtags
+  - تجنب الادعاءات غير الموثوقة؛ لو المعلومة غير مؤكدة استخدم صياغة “يُقال/بحسب…”.
+
+# تكامل X OAuth2
+- أنشئ صفحة /settings/x
+- نفّذ OAuth2 flow:
+  - redirect to X authorize
+  - callback endpoint /api/x/callback
+  - تبادل code -> tokens
+  - خزّن access_token/refresh_token/expiry داخل x_accounts
+- استخدم refresh token عند انتهاء الصلاحية.
+
+# متطلبات الواجهة
+- تصميم نظيف واحترافي
+- Cards للمقترحات + editor بسيط (textarea) + عداد أحرف live
+- فلاتر: suggested / approved / published
+- إشعارات نجاح/فشل (toast)
+
+# متغيرات البيئة (ENV)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=  (server only)
+OPENAI_API_KEY=
+SEARCH_API_KEY=
+X_CLIENT_ID=
+X_CLIENT_SECRET=
+X_REDIRECT_URI=
+
+# مخرجات مطلوبة
+- مشروع شغال محلياً
+- صفحات كاملة + API routes + إعداد Supabase client
+- README مختصر للتشغيل
+- أمثلة على payloads للـ APIs

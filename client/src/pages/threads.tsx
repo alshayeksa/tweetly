@@ -84,6 +84,10 @@ export default function ThreadsPage() {
         setTrialLimitMessage(err.messageEn || err.message);
         setTrialLimitMessageAr(err.messageAr || err.message);
         setShowTrialLimitModal(true);
+      } else if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
+        setTrialLimitMessage(err.message);
+        setTrialLimitMessageAr(err.messageAr || err.message);
+        setShowTrialLimitModal(true);
       } else {
         toast({ title: err.message || "Failed to generate thread", variant: "destructive" });
       }
@@ -99,8 +103,14 @@ export default function ThreadsPage() {
       setPromptText(data.improvedPrompt);
       toast({ title: "Prompt improved!" });
     },
-    onError: () => {
-      toast({ title: "Failed to improve prompt", variant: "destructive" });
+    onError: (err: any) => {
+      if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
+        setTrialLimitMessage(err.message);
+        setTrialLimitMessageAr(err.messageAr || err.message);
+        setShowTrialLimitModal(true);
+      } else {
+        toast({ title: "Failed to improve prompt", variant: "destructive" });
+      }
     },
   });
 

@@ -577,13 +577,25 @@ Now generate exactly ${tweetCount} tweets based strictly on the real news above.
   // ==================== IMPROVE PROMPT ====================
   app.post("/api/prompt/improve", isAuthenticated, requireSubscription, async (req, res) => {
     try {
+      const userId = getUserId(req);
       const { prompt: userPrompt } = req.body;
 
       if (!userPrompt || typeof userPrompt !== "string" || !userPrompt.trim()) {
         return res.status(400).json({ message: "Prompt is required" });
       }
 
-      const improved = await improvePromptText(getUserId(req), userPrompt);
+      // ✅ Check daily AI generation rate limit
+      const limitCheck = await checkTweetLimit(userId);
+      const rateCheck = checkGenerationRateLimit(userId, limitCheck.plan ?? "free");
+      if (!rateCheck.allowed) {
+        return res.status(429).json({
+          message: "You've reached your daily AI generation limit.\nYour limit will reset tomorrow.\nIf you'd like to keep creating tweets today, you can upgrade your plan for higher daily limits.",
+          messageAr: "لقد وصلت إلى الحد اليومي لتوليد التغريدات بالذكاء الاصطناعي.\nسيتم إعادة تعيين الحد غدًا.\nإذا رغبت في الاستمرار بإنشاء التغريدات اليوم، يمكنك الترقية إلى باقة أعلى.",
+          code: "GENERATION_RATE_LIMIT",
+        });
+      }
+
+      const improved = await improvePromptText(userId, userPrompt);
       res.json({ improvedPrompt: improved });
     } catch (error) {
       console.error("Error improving prompt:", error);

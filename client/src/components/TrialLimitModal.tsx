@@ -11,6 +11,7 @@ interface TrialLimitModalProps {
   onClose: () => void;
   message?: string;
   messageAr?: string;
+  hideProgress?: boolean;
 }
 
 interface Accent {
@@ -110,7 +111,7 @@ function getPlanContent(plan: string, tweetsUsed: number, monthlyLimit: number |
   }
 }
 
-export function TrialLimitModal({ isOpen, onClose, message, messageAr }: TrialLimitModalProps) {
+export function TrialLimitModal({ isOpen, onClose, message, messageAr, hideProgress }: TrialLimitModalProps) {
   const { i18n } = useTranslation();
   const isAr = i18n.language === "ar";
   const { prices } = usePlanPrices();
@@ -243,7 +244,7 @@ export function TrialLimitModal({ isOpen, onClose, message, messageAr }: TrialLi
         </div>
 
         {/* Progress */}
-        {subscription && monthlyLimit !== null && (
+        {!hideProgress && subscription && monthlyLimit !== null && (
           <div className="px-6 mb-2 space-y-1">
             <div className="flex justify-between text-xs text-zinc-500">
               <span>{isAr ? "التغريدات المستخدمة" : "Tweets used"}</span>

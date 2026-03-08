@@ -206,6 +206,7 @@ export default function SchedulePage() {
   const [mode, setMode] = useState<"manual" | "ai">("manual");
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitMessage, setLimitMessage] = useState<{en:string;ar:string} | undefined>();
+  const [limitHideProgress, setLimitHideProgress] = useState(false);
   const [showDailyLimitModal, setShowDailyLimitModal] = useState(false);
   const [dailyLimitRetryAfterMs, setDailyLimitRetryAfterMs] = useState<number | undefined>();
   const [dailyLimitTitle, setDailyLimitTitle] = useState<string | undefined>();
@@ -285,12 +286,14 @@ export default function SchedulePage() {
         setShowDailyLimitModal(true);
       } else if (err.code === "PLAN_UPGRADE_REQUIRED" || err.status === 403) {
         setLimitMessage({
-          en: "AI-powered schedule generation is a Pro feature. Upgrade to unlock it.",
-          ar: "توليد الجدولة بالذكاء الاصطناعي ميزة حصرية لخطة Creator وما فوق. قم بالترقية لفتحها.",
+          en: "AI schedule generation is available on the Starter plan and above. Upgrade to unlock it.",
+          ar: "توليد الجدولة بالذكاء الاصطناعي متاح في خطة Starter وما فوق. قم بالترقية لفتحه.",
         });
+        setLimitHideProgress(true);
         setShowLimitModal(true);
       } else if (err.code === "TWEET_LIMIT_REACHED" || err.code === "TRIAL_TWEET_LIMIT_EXCEEDED" || err.status === 402) {
         setLimitMessage({ en: err.messageEn || err.message, ar: err.messageAr || err.message });
+        setLimitHideProgress(false);
         setShowLimitModal(true);
       } else {
         toast({ title: err.message || "Generation failed", variant: "destructive" });
@@ -493,6 +496,7 @@ export default function SchedulePage() {
         onClose={() => setShowLimitModal(false)}
         message={limitMessage?.en}
         messageAr={limitMessage?.ar}
+        hideProgress={limitHideProgress}
       />
       <DailyLimitModal
         isOpen={showDailyLimitModal}

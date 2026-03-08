@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Link2, Unlink, AlertCircle, CheckCircle2, Trash2, Zap, TrendingUp, Bot, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteNameInput, setDeleteNameInput] = useState("");
   const [showLimitModal, setShowLimitModal] = useState(false);
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
@@ -453,12 +455,12 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* ── Danger Zone ───────────────────────────────────────────── */}
+      {/* ── Delete Account ────────────────────────────────────────── */}
       <Card className="border-red-200">
         <CardHeader>
           <CardTitle className="text-lg text-red-600 flex items-center gap-2">
             <Trash2 className="w-5 h-5" />
-            {t("settings.dangerZone")}
+            {t("settings.deleteAccount")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -470,7 +472,7 @@ export default function SettingsPage() {
             <Button
               variant="outline"
               className="border-red-300 text-red-600 hover:bg-red-50"
-              onClick={() => setShowDeleteConfirm(true)}
+              onClick={() => { setShowDeleteConfirm(true); setDeleteNameInput(""); }}
             >
               <Trash2 className="w-4 h-4 mr-2" />
               {t("settings.deleteAccount")}
@@ -480,10 +482,24 @@ export default function SettingsPage() {
               <p className="text-sm font-semibold text-red-700">
                 {t("settings.deleteConfirm")}
               </p>
+              <div className="space-y-2">
+                <p className="text-xs text-red-600">
+                  {i18n.language === "ar"
+                    ? `اكتب اسمك "${user?.firstName ?? ""} ${user?.lastName ?? ""}" للتأكيد`
+                    : `Type your name "${user?.firstName ?? ""} ${user?.lastName ?? ""}" to confirm`}
+                </p>
+                <Input
+                  value={deleteNameInput}
+                  onChange={(e) => setDeleteNameInput(e.target.value)}
+                  placeholder={`${user?.firstName ?? ""} ${user?.lastName ?? ""}`}
+                  className="border-red-300 bg-white text-sm"
+                />
+              </div>
               <div className="flex gap-3">
                 <Button
                   variant="destructive"
                   size="sm"
+                  disabled={deleteNameInput.trim() !== `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim()}
                   onClick={async () => {
                     try {
                       await apiRequest("DELETE", "/api/user");
@@ -503,7 +519,7 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowDeleteConfirm(false)}
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteNameInput(""); }}
                 >
                   {t("common.cancel")}
                 </Button>

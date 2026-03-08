@@ -144,9 +144,7 @@ export default function SettingsPage() {
                 <div>
                   <p className="text-sm font-medium">{t("settings.currentPlan")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {subscription.isTrial
-                      ? t("settings.trialStatus", { days: subscription.daysLeft ?? 0, s: (subscription.daysLeft ?? 0) === 1 ? "" : "s" })
-                      : subscription.isActive
+                    {subscription.isActive
                       ? t("settings.activeStatus")
                       : t("settings.inactiveStatus")}
                   </p>

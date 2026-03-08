@@ -67,15 +67,6 @@ export const PLANS = {
     aiRewrite: false,
     aiWrite: true,
   },
-  FREE_TRIAL: {
-    name: "Free Trial",
-    durationDays: 7,
-    tweetsPerMonth: 30,
-    autoTweets: false,
-    threads: true,
-    maxThreadTweets: 3,
-    aiWrite: true,
-  },
   STARTER: {
     name: "Starter",
     tweetsPerMonth: 300,
@@ -140,11 +131,6 @@ export async function isSubscriptionActive(userId: string): Promise<boolean> {
     return true;
   }
 
-  // Trial period
-  if (user.subscriptionStatus === "trial" && user.trialEndsAt && user.trialEndsAt > now) {
-    return true;
-  }
-
   return false;
 }
 
@@ -186,13 +172,11 @@ export async function getSubscriptionInfo(userId: string) {
 
   let daysLeft: number | null = null;
 
-  if (user.subscriptionStatus === "trial" && user.trialEndsAt) {
-    daysLeft = Math.max(0, Math.ceil((user.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-  } else if (user.subscriptionStatus === "active" && user.subscriptionEndsAt) {
+  if (user.subscriptionStatus === "active" && user.subscriptionEndsAt) {
     daysLeft = Math.max(0, Math.ceil((user.subscriptionEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
   }
 
-  const isFree = !user.subscriptionStatus || user.subscriptionStatus === "none" || user.subscriptionStatus === "trial" && (!user.trialEndsAt || user.trialEndsAt <= new Date());
+  const isFree = !user.subscriptionStatus || user.subscriptionStatus === "none";
   // Use the monthlyTweetLimit stored in DB (set correctly for every plan on upgrade)
   const monthlyLimit = user.monthlyTweetLimit ?? PLAN_TWEET_LIMITS[user.plan ?? "free"] ?? 25;
   const tweetsUsed = user.tweetsUsed ?? 0;
@@ -201,12 +185,12 @@ export async function getSubscriptionInfo(userId: string) {
   return {
     status: user.subscriptionStatus || "none",
     isActive,
-    isTrial: user.subscriptionStatus === "trial",
+    isTrial: false,
     isPaid: user.subscriptionStatus === "active",
     isFree: user.plan === "free",
     plan: user.plan ?? "free",
     daysLeft,
-    trialEndsAt: user.trialEndsAt,
+    trialEndsAt: null,
     subscriptionEndsAt: user.subscriptionEndsAt,
     // Tweet usage — tracked for all plans
     tweetsUsed,
@@ -343,19 +327,6 @@ export async function checkTweetLimit(userId: string): Promise<{
   const used = fresh.tweetsUsed ?? 0;
   const limit = fresh.monthlyTweetLimit ?? PLAN_TWEET_LIMITS[plan] ?? 25;
   const remaining = Math.max(0, limit - used);
-
-  // Trial expired
-  if (fresh.subscriptionStatus === "trial") {
-    if (fresh.trialEndsAt && fresh.trialEndsAt <= now) {
-      return {
-        allowed: false,
-        message: {
-          en: "Your free trial has ended. Upgrade to continue publishing.",
-          ar: "انتهت فترتك التجريبية. قم بالترقية للمتابعة.",
-        },
-      };
-    }
-  }
 
   // Enforce monthly limit for ALL plans
   if (used >= limit) {

@@ -7,12 +7,10 @@ export function TrialExpiredModal() {
   const { subscription } = useSubscription();
   const isAr = i18n.language === "ar";
 
-  // Only show modal if trial has actually expired.
-  // Free plan users are NOT expired — they have an ongoing free plan.
+  // Only show modal if subscription is expired (not free, not paid, not active)
   if (
     !subscription ||
     subscription.isFree ||
-    subscription.isTrial ||
     subscription.isPaid ||
     subscription.status === "active"
   ) {
@@ -20,7 +18,7 @@ export function TrialExpiredModal() {
   }
 
   // Respect "Maybe Later" dismissal
-  if (typeof window !== "undefined" && sessionStorage.getItem("dismissTrialExpired") === "true") {
+  if (typeof window !== "undefined" && sessionStorage.getItem("dismissExpiredModal") === "true") {
     return null;
   }
 
@@ -30,7 +28,7 @@ export function TrialExpiredModal() {
 
   const handleLater = () => {
     // Close modal - user can dismiss it
-    sessionStorage.setItem("dismissTrialExpired", "true");
+    sessionStorage.setItem("dismissExpiredModal", "true");
     window.location.href = "/";
   };
 
@@ -49,7 +47,7 @@ export function TrialExpiredModal() {
         <p className={`text-gray-300 text-center mb-8 leading-relaxed ${isAr ? 'text-arabic-body' : ''}`}>
           {isAr
             ? "وصلت إلى نهاية الخطة المجانية. هل تريد الاستمرار في بناء جمهورك دون توقف؟"
-            : "You've reached the end of your free trial. Ready to keep growing without limits?"}
+            : "You've reached the limit of your free plan. Ready to keep growing without limits?"}
         </p>
 
         {/* Features List */}

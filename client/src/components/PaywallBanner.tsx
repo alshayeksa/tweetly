@@ -1,4 +1,4 @@
-import { AlertCircle, Clock, Zap } from "lucide-react";
+import { AlertCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -12,25 +12,6 @@ export function PaywallBanner() {
 
   // Free plan users are never "expired" — skip all paywall banners for them.
   if (subscription.isFree) return null;
-
-  // Trial ending soon (3 days or less)
-  if (subscription.isTrial && subscription.daysLeft !== null && subscription.daysLeft <= 3) {
-    return (
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 mx-2 mb-2">
-        <Clock className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-amber-800">
-            {t("paywall.trialEnding", { days: subscription.daysLeft })}
-          </p>
-          <Link href="/pricing">
-            <Button size="sm" className="mt-1.5 h-6 text-xs w-full">
-              Upgrade to Pro
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   // Subscription expired
   if (!subscription.isActive) {

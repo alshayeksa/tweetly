@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { Check, Zap, Sparkles, Clock, Tag, CheckCircle2, Loader2, X } from "lucide-react";
+import { Check, Zap, Sparkles, Tag, CheckCircle2, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -227,18 +227,8 @@ export default function PricingPage() {
           </div>
         )}
 
-        {/* Trial banner */}
-        {subscription?.isTrial && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
-            <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
-            <p className="text-amber-800 text-sm">
-              {t("pricing.trialBannerFull", { days: subscription?.daysLeft, s: (subscription?.daysLeft ?? 0) !== 1 ? "s" : "" })}
-            </p>
-          </div>
-        )}
-
         {/* Expired banner */}
-        {subscription && !subscription.isActive && !subscription.isTrial && (
+        {subscription && !subscription.isActive && (
           <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-center gap-3">
             <Zap className="w-5 h-5 text-rose-600 flex-shrink-0" />
             <p className="text-rose-800 text-sm">

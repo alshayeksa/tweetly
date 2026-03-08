@@ -277,12 +277,11 @@ async function downgradeExpiredSubscription(userId: string): Promise<void> {
 // Check if user can still publish based on their plan limit
 export async function checkTweetLimit(userId: string): Promise<{
   allowed: boolean;
-  plan?: string;
   tweetsUsed?: number;
   tweetsRemaining?: number;
   limit?: number;
   message?: { en: string; ar: string };
-}>  {
+}> {
   const user = await getUserSubscription(userId);
   if (!user) return { allowed: false };
 
@@ -364,7 +363,7 @@ export async function checkTweetLimit(userId: string): Promise<{
     };
   }
 
-  return { allowed: true, plan, tweetsUsed: used, tweetsRemaining: remaining, limit };
+  return { allowed: true, tweetsUsed: used, tweetsRemaining: remaining, limit };
 }
 
 // Check if user's plan supports advanced scheduling (AI Generate for Schedule) — Creator+ only

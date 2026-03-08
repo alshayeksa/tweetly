@@ -225,6 +225,12 @@ export default function SchedulePage() {
 
   const { data: tweets, isLoading } = useQuery<ScheduledTweet[]>({ queryKey: ["/api/scheduled-tweets"] });
 
+  const { data: xStatus } = useQuery<{ connected: boolean }>({
+    queryKey: ["/api/x/status"],
+    staleTime: 1000 * 60 * 2,
+  });
+  const xNotConnected = !xStatus?.connected;
+
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!content.trim()) throw new Error(isAr ? "اكتب التغريدة أولا" : "Write your tweet first");
@@ -315,8 +321,8 @@ export default function SchedulePage() {
 
       {/* Mode toggle */}
       <div className="flex gap-2">
-        <Button variant={mode === "manual" ? "default" : "outline"} size="sm" onClick={() => setMode("manual")} className="flex items-center gap-2"><PenLine className="w-4 h-4" />{isAr ? "كتابة يدوية" : "Write manually"}</Button>
-        <Button variant={mode === "ai" ? "default" : "outline"} size="sm" onClick={() => setMode("ai")} className="flex items-center gap-2"><Sparkles className="w-4 h-4" />{isAr ? "توليد بالذكاء الاصطناعي" : "Generate with AI"}</Button>
+        <Button variant={mode === "manual" ? "default" : "outline"} size="sm" onClick={() => setMode("manual")} disabled={xNotConnected} className="flex items-center gap-2"><PenLine className="w-4 h-4" />{isAr ? "كتابة يدوية" : "Write manually"}</Button>
+        <Button variant={mode === "ai" ? "default" : "outline"} size="sm" onClick={() => setMode("ai")} disabled={xNotConnected} className="flex items-center gap-2"><Sparkles className="w-4 h-4" />{isAr ? "توليد بالذكاء الاصطناعي" : "Generate with AI"}</Button>
       </div>
 
       {/* Manual mode */}

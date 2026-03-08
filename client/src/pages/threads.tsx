@@ -46,6 +46,12 @@ export default function ThreadsPage() {
     queryKey: ["/api/suggestions"],
   });
 
+  const { data: xStatus } = useQuery<{ connected: boolean }>({
+    queryKey: ["/api/x/status"],
+    staleTime: 1000 * 60 * 2,
+  });
+  const xNotConnected = !xStatus?.connected;
+
   // Group suggestions by threadId
   const threads = suggestionsList?.reduce((acc, s) => {
     if (s.threadId) {
@@ -281,7 +287,7 @@ export default function ThreadsPage() {
               }
               generateMutation.mutate({ prompt: promptText, language, tone });
             }}
-            disabled={!promptText.trim() || generateMutation.isPending}
+            disabled={!promptText.trim() || generateMutation.isPending || xNotConnected}
           >
             {generateMutation.isPending ? (
               <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t("threads.generating")}</>
@@ -292,7 +298,7 @@ export default function ThreadsPage() {
           <Button
             variant="outline"
             onClick={() => improveMutation.mutate(promptText)}
-            disabled={!promptText.trim() || improveMutation.isPending}
+            disabled={!promptText.trim() || improveMutation.isPending || xNotConnected}
           >
             {improveMutation.isPending ? (
               <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{t("threads.improving")}</>

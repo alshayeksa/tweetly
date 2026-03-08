@@ -412,6 +412,12 @@ export default function AutoTweetsPage() {
     queryKey: ["/api/automations"],
   });
 
+  const { data: xStatus } = useQuery<{ connected: boolean }>({
+    queryKey: ["/api/x/status"],
+    staleTime: 1000 * 60 * 2,
+  });
+  const xNotConnected = !xStatus?.connected;
+
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/automations", data);
@@ -476,6 +482,7 @@ export default function AutoTweetsPage() {
         <h1 className="text-2xl font-bold" data-testid="text-auto-tweets-title">{t("autoTweets.title") || "Auto Tweets"}</h1>
         <Button
           data-testid="button-create-automation"
+          disabled={xNotConnected}
           onClick={() => {
             const plan = subscription?.plan ?? "free";
             if (plan !== "pro") {

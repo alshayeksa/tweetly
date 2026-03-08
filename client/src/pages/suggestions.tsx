@@ -54,6 +54,12 @@ export default function SuggestionsPage() {
     },
   });
 
+  const { data: xStatus } = useQuery<{ connected: boolean }>({
+    queryKey: ["/api/x/status"],
+    staleTime: 1000 * 60 * 2,
+  });
+  const xNotConnected = !xStatus?.connected;
+
   const activeSuggestions = suggestionsList?.filter(s => s.status === "pending" || s.status === "approved") || [];
   const historySuggestions = suggestionsList?.filter(s => s.status === "published" || s.status === "rejected") || [];
 
@@ -274,7 +280,7 @@ export default function SuggestionsPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <Button
             onClick={handleGenerate}
-            disabled={!promptText.trim() || generateMutation.isPending}
+            disabled={!promptText.trim() || generateMutation.isPending || xNotConnected}
             data-testid="button-generate"
           >
             {generateMutation.isPending ? (
@@ -286,7 +292,7 @@ export default function SuggestionsPage() {
           <Button
             variant="outline"
             onClick={handleImprove}
-            disabled={!promptText.trim() || improveMutation.isPending}
+            disabled={!promptText.trim() || improveMutation.isPending || xNotConnected}
             data-testid="button-improve-prompt"
           >
             {improveMutation.isPending ? (

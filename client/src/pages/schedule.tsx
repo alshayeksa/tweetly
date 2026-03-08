@@ -280,18 +280,11 @@ export default function SchedulePage() {
       toast({ title: isAr ? `تم توليد ${items.length} تغريدات` : `Generated ${items.length} tweets` });
     },
     onError: (err: any) => {
-      if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
+      if (err.code === "GENERATION_RATE_LIMIT" || err.code === "PLAN_UPGRADE_REQUIRED" || err.status === 429 || err.status === 403) {
         setDailyLimitRetryAfterMs(err.retryAfterMs);
         setDailyLimitTitle(undefined); setDailyLimitTitleAr(undefined);
         setDailyLimitDesc(undefined); setDailyLimitDescAr(undefined);
         setDailyLimitHideClock(false);
-        setShowDailyLimitModal(true);
-      } else if (err.code === "PLAN_UPGRADE_REQUIRED" || err.status === 403) {
-        setDailyLimitTitle("AI Scheduling Requires Creator+");
-        setDailyLimitTitleAr("توليد الجدولة يتطلب خطة Creator أو أعلى");
-        setDailyLimitDesc(err.messageEn || err.message || "Upgrade to the Creator plan to generate AI tweets for scheduling.");
-        setDailyLimitDescAr(err.messageAr || "قم بالترقية إلى خطة Creator لتوليد تغريدات بالذكاء الاصطناعي للجدولة.");
-        setDailyLimitHideClock(true);
         setShowDailyLimitModal(true);
       } else if (err.code === "TWEET_LIMIT_REACHED" || err.code === "TRIAL_TWEET_LIMIT_EXCEEDED" || err.status === 402) {
         setLimitMessage({ en: err.messageEn || err.message, ar: err.messageAr || err.message });

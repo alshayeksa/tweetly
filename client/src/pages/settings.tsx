@@ -28,6 +28,8 @@ export default function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteNameInput, setDeleteNameInput] = useState("");
   const [showLimitModal, setShowLimitModal] = useState(false);
+  const [paymentVerifying, setPaymentVerifying] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const successMsg = params.get("success");
@@ -35,14 +37,21 @@ export default function SettingsPage() {
   const errorMsg = params.get("error");
   const { subscription, openPortal, isOpeningPortal } = useSubscription();
 
-  // After payment redirect: verify directly with Paylink then poll until plan updates
+  // After payment redirect: verify with Paylink then poll until plan updates
   useEffect(() => {
     if (successMsg !== "subscribed") return;
 
-    const orderParam = params.get("order");
+    setPaymentVerifying(true);
+    setPaymentConfirmed(false);
 
+    const orderParam = params.get("order");
     let attempts = 0;
     const maxAttempts = 20; // poll up to 40 seconds
+
+    const confirm = () => {
+      setPaymentVerifying(false);
+      setPaymentConfirmed(true);
+    };
 
     const poll = async () => {
       attempts++;
@@ -55,8 +64,8 @@ export default function SettingsPage() {
           });
           const data = await res.json();
           if (data.verified) {
-            // Payment confirmed — refresh subscription and stop
             await queryClient.invalidateQueries({ queryKey: ["/api/subscription"] });
+            confirm();
             return;
           }
         } catch { /* fall through to polling */ }
@@ -65,7 +74,16 @@ export default function SettingsPage() {
       await queryClient.invalidateQueries({ queryKey: ["/api/subscription"] });
       const data = queryClient.getQueryData<{ isPaid?: boolean; plan?: string }>(["/api/subscription"]);
 
-      if ((data?.isPaid || (planParam && data?.plan === planParam)) || attempts >= maxAttempts) return;
+      // Confirmed if plan matches the purchased plan (covers renewals & upgrades)
+      if (planParam && data?.plan === planParam) {
+        confirm();
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        setPaymentVerifying(false);
+        return;
+      }
 
       setTimeout(poll, 2000);
     };
@@ -301,11 +319,26 @@ export default function SettingsPage() {
         );
       })()}
 
-      {successMsg === "subscribed" && !subscription?.isPaid && (
+      {paymentVerifying && (
         <Card className="border-blue-300/30 bg-blue-50/10">
           <CardContent className="p-4 flex items-center gap-3">
             <Loader2 className="w-5 h-5 text-blue-400 shrink-0 animate-spin" />
-            <p className="text-sm text-blue-300">Confirming your payment... this may take a few seconds.</p>
+            <p className="text-sm text-blue-300">
+              {i18n.language === "ar" ? "جاري تأكيد عملية الدفع... قد يستغرق هذا بضع ثوان" : "Confirming your payment... this may take a few seconds."}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {paymentConfirmed && (
+        <Card className="border-green-300/30 bg-green-50/10">
+          <CardContent className="p-4 flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+            <p className="text-sm text-green-600 font-medium">
+              {i18n.language === "ar"
+                ? `تمت عملية الدفع بنجاح! مرحباً بك في خطة ${planParam ?? ""}`
+                : `Payment confirmed! Welcome to the ${planParam ?? ""} plan.`}
+            </p>
           </CardContent>
         </Card>
       )}

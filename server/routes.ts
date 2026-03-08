@@ -22,6 +22,31 @@ const publicApiLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many requests. Please slow down." },
 });
+
+// ── Per-user daily AI generation rate limiter ─────────────────────────────
+const DAILY_GEN_LIMITS: Record<string, number> = {
+  free: 10, starter: 30, creator: 60, pro: 120,
+};
+const genCallTracker = new Map<string, { count: number; resetAt: number }>();
+
+function checkGenerationRateLimit(userId: string, plan: string): { allowed: boolean; retryAfterMs: number } {
+  const limit = DAILY_GEN_LIMITS[plan] ?? DAILY_GEN_LIMITS.free;
+  const now = Date.now();
+  const todayMidnight = new Date();
+  todayMidnight.setUTCHours(24, 0, 0, 0);
+  const resetAt = todayMidnight.getTime();
+
+  let entry = genCallTracker.get(userId);
+  if (!entry || now >= entry.resetAt) {
+    entry = { count: 0, resetAt };
+  }
+  if (entry.count >= limit) {
+    return { allowed: false, retryAfterMs: entry.resetAt - now };
+  }
+  entry.count += 1;
+  genCallTracker.set(userId, entry);
+  return { allowed: true, retryAfterMs: 0 };
+}
 import { setupAuth } from "./replit_integrations/auth/replitAuth";
 import { registerAuthRoutes } from "./replit_integrations/auth/routes";
 import { logLoginEvent } from "./auth-logger";
@@ -276,6 +301,16 @@ export async function registerRoutes(
           message: limitCheck.message?.en,
           messageAr: limitCheck.message?.ar,
           code: "TWEET_LIMIT_REACHED",
+        });
+      }
+
+      // ✅ Check per-user daily AI generation rate limit
+      const rateCheck = checkGenerationRateLimit(userId, limitCheck.plan ?? "free");
+      if (!rateCheck.allowed) {
+        return res.status(429).json({
+          message: "You've reached your daily AI generation limit.\nYour limit will reset tomorrow.\nIf you'd like to keep creating tweets today, you can upgrade your plan for higher daily limits.",
+          messageAr: "لقد وصلت إلى الحد اليومي لتوليد التغريدات بالذكاء الاصطناعي.\nسيتم إعادة تعيين الحد غدًا.\nإذا رغبت في الاستمرار بإنشاء التغريدات اليوم، يمكنك الترقية إلى باقة أعلى.",
+          code: "GENERATION_RATE_LIMIT",
         });
       }
 

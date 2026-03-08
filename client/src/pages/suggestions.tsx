@@ -80,6 +80,10 @@ export default function SuggestionsPage() {
         setTrialLimitMessage(err.messageEn || err.message);
         setTrialLimitMessageAr(err.messageAr || err.message);
         setShowTrialLimitModal(true);
+      } else if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
+        setTrialLimitMessage(err.message);
+        setTrialLimitMessageAr(err.messageAr || err.message);
+        setShowTrialLimitModal(true);
       } else {
         const msg = isAr ? (err.messageAr || err.message) : (err.messageEn || err.message);
         toast({ title: msg || t("common.error"), variant: "destructive" });

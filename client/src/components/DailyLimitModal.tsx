@@ -7,6 +7,11 @@ interface DailyLimitModalProps {
   isOpen: boolean;
   onClose: () => void;
   retryAfterMs?: number;
+  title?: string;
+  titleAr?: string;
+  description?: string;
+  descriptionAr?: string;
+  hideClock?: boolean;
 }
 
 function getResetInfo(retryAfterMs?: number): { hours: number; resetTimeUTC: string } {
@@ -34,7 +39,7 @@ const accent = {
   primaryShadow: "rgba(245,158,11,0.35)",
 };
 
-export function DailyLimitModal({ isOpen, onClose, retryAfterMs }: DailyLimitModalProps) {
+export function DailyLimitModal({ isOpen, onClose, retryAfterMs, title, titleAr, description, descriptionAr, hideClock }: DailyLimitModalProps) {
   const { i18n } = useTranslation();
   const isAr = i18n.language === "ar";
   const [isVisible, setIsVisible] = useState(isOpen);
@@ -84,30 +89,32 @@ export function DailyLimitModal({ isOpen, onClose, retryAfterMs }: DailyLimitMod
             {isAr ? "تم الوصول للحد اليومي" : "DAILY LIMIT REACHED"}
           </div>
           <h2 className="text-xl font-bold text-white mb-3">
-            {isAr ? "وصلت للحد اليومي للذكاء الاصطناعي" : "Daily AI Limit Reached"}
+            {isAr ? (titleAr ?? "وصلت للحد اليومي للذكاء الاصطناعي") : (title ?? "Daily AI Limit Reached")}
           </h2>
-          <p className="text-sm text-zinc-400 leading-relaxed">
+          <p className="text-sm text-zinc-400 leading-relaxed whitespace-pre-line">
             {isAr
-              ? `لقد وصلت إلى الحد اليومي لتوليد التغريدات بالذكاء الاصطناعي.\nسيتم إعادة الحد خلال ${hours} ${hours === 1 ? "ساعة" : "ساعات"}.`
-              : `You've reached your daily AI generation limit.\nYour limit will reset in ${hours} ${hours === 1 ? "hour" : "hours"}.`}
+              ? (descriptionAr ?? `لقد وصلت إلى الحد اليومي لتوليد التغريدات بالذكاء الاصطناعي.\nسيتم إعادة الحد خلال ${hours} ${hours === 1 ? "ساعة" : "ساعات"}.`)
+              : (description ?? `You've reached your daily AI generation limit.\nYour limit will reset in ${hours} ${hours === 1 ? "hour" : "hours"}.`)}
           </p>
         </div>
 
-        {/* Info card */}
-        <div
-          className="mx-6 mb-5 rounded-xl px-4 py-3 text-center"
-          style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)" }}
-        >
-          <div className="text-2xl font-bold" style={{ color: accent.badgeText }}>
-            {hours}h
+        {/* Info card — hidden when showing a plan-gate message */}
+        {!hideClock && (
+          <div
+            className="mx-6 mb-5 rounded-xl px-4 py-3 text-center"
+            style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)" }}
+          >
+            <div className="text-2xl font-bold" style={{ color: accent.badgeText }}>
+              {hours}h
+            </div>
+            <div className="text-xs text-zinc-500 mt-0.5">
+              {isAr ? "حتى إعادة الضبط" : "until reset"}
+            </div>
+            <div className="text-xs mt-1.5" style={{ color: accent.badgeText }}>
+              {resetTimeUTC}
+            </div>
           </div>
-          <div className="text-xs text-zinc-500 mt-0.5">
-            {isAr ? "حتى إعادة الضبط" : "until reset"}
-          </div>
-          <div className="text-xs mt-1.5" style={{ color: accent.badgeText }}>
-            {resetTimeUTC}
-          </div>
-        </div>
+        )}
 
         {/* Buttons */}
         <div className="px-6 pb-5 space-y-2.5">

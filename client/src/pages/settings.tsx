@@ -283,15 +283,16 @@ export default function SettingsPage() {
                         </li>
                       ))}
                     </ul>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3 gap-2"
-                      onClick={() => setShowLimitModal(true)}
-                    >
-                      <Zap className="w-3.5 h-3.5" />
-                      {i18n.language === "ar" ? "إدارة الباقة" : "Manage Plan"}
-                    </Button>
+                    <Link href="/pricing">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 gap-2"
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        {i18n.language === "ar" ? "عرض الباقات" : "View Plans"}
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </div>

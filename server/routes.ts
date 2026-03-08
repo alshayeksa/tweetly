@@ -560,6 +560,18 @@ Now generate exactly ${tweetCount} tweets based strictly on the real news above.
           code: "TWEET_LIMIT_REACHED",
         });
       }
+
+      // ✅ Check daily AI generation rate limit
+      const rateCheck = checkGenerationRateLimit(userId, limitCheck.plan ?? "free");
+      if (!rateCheck.allowed) {
+        return res.status(429).json({
+          message: "You've reached your daily AI generation limit.\nYour limit will reset tomorrow.\nIf you'd like to keep creating tweets today, you can upgrade your plan for higher daily limits.",
+          messageAr: "لقد وصلت إلى الحد اليومي لتوليد التغريدات بالذكاء الاصطناعي.\nسيتم إعادة تعيين الحد غدًا.\nإذا رغبت في الاستمرار بإنشاء التغريدات اليوم، يمكنك الترقية إلى باقة أعلى.",
+          code: "GENERATION_RATE_LIMIT",
+          retryAfterMs: rateCheck.retryAfterMs,
+        });
+      }
+
       const tweets = await runAITweetGeneration({
         userId: getUserId(req),
         userPrompt: prompt,

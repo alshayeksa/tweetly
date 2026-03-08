@@ -22,6 +22,38 @@ const publicApiLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many requests. Please slow down." },
 });
+
+// ── Per-user daily AI generation rate limiter ─────────────────────────────
+// Tracks how many times each user called /api/suggestions/generate today.
+// Limits: free=5, starter=15, creator=30, pro=60 requests/day
+const DAILY_GEN_LIMITS: Record<string, number> = {
+  free: 5,
+  starter: 15,
+  creator: 30,
+  pro: 60,
+};
+const genCallTracker = new Map<string, { count: number; resetAt: number }>();
+
+function checkGenerationRateLimit(userId: string, plan: string): { allowed: boolean; retryAfterMs: number } {
+  const limit = DAILY_GEN_LIMITS[plan] ?? DAILY_GEN_LIMITS.free;
+  const now = Date.now();
+  const todayMidnight = new Date();
+  todayMidnight.setHours(24, 0, 0, 0);
+  const resetAt = todayMidnight.getTime();
+
+  let entry = genCallTracker.get(userId);
+  if (!entry || now >= entry.resetAt) {
+    entry = { count: 0, resetAt };
+  }
+
+  if (entry.count >= limit) {
+    return { allowed: false, retryAfterMs: entry.resetAt - now };
+  }
+
+  entry.count += 1;
+  genCallTracker.set(userId, entry);
+  return { allowed: true, retryAfterMs: 0 };
+}
 import { setupAuth } from "./replit_integrations/auth/replitAuth";
 import { registerAuthRoutes } from "./replit_integrations/auth/routes";
 import { logLoginEvent } from "./auth-logger";
@@ -279,6 +311,18 @@ export async function registerRoutes(
         });
       }
 
+      // ✅ Check per-user daily generation rate limit
+      const userPlan = limitCheck.plan ?? "free";
+      const rateCheck = checkGenerationRateLimit(userId, userPlan);
+      if (!rateCheck.allowed) {
+        const hoursLeft = Math.ceil(rateCheck.retryAfterMs / (1000 * 60 * 60));
+        return res.status(429).json({
+          message: `You have reached your daily generation limit. Try again in ${hoursLeft} hour(s).`,
+          messageAr: `لقد وصلت إلى الحد اليومي للتوليد. حاول مرة أخرى خلال ${hoursLeft} ساعة.`,
+          code: "GENERATION_RATE_LIMIT",
+        });
+      }
+
       // ✅ FIXED: Moved needsRealTimeSearch definition BEFORE usage
       const needsRealTimeSearch = /news|latest|today|24.hour|current|recent|أخبار|اليوم|الأخير|الأحدث|ساعة/i.test(userPrompt);
       const provider = await getAiProvider(userId);
@@ -408,7 +452,6 @@ ${needsRealTimeSearch ? "- مبنية على أخبار حقيقية موثقة\
           prompt: userPrompt.trim().substring(0, 500),
         }));
         const createdSuggestions = await storage.createSuggestions(userId, suggestionData);
-        await incrementTweetsUsed(userId, createdSuggestions.length);
         await storage.logActivity(userId, "generated", "manual", undefined, `Generated ${createdSuggestions.length} manual tweets — "${userPrompt.trim().substring(0, 100)}"`);
         return res.json(createdSuggestions);
       }
@@ -482,7 +525,6 @@ Now generate exactly ${tweetCount} tweets based strictly on the real news above.
       }));
 
       const createdSuggestions = await storage.createSuggestions(userId, suggestionData);
-      await incrementTweetsUsed(userId, createdSuggestions.length);
       await storage.logActivity(
         userId,
         "generated",

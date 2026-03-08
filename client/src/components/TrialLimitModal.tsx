@@ -77,7 +77,7 @@ function getPlanContent(plan: string, tweetsUsed: number, monthlyLimit: number |
       stats: [{ value: `${proLimit}`, label: "tweets/mo" }, { value: "24/7", label: "autopilot" }, { value: "∞", label: "automations" }],
       accent: { glow: "rgba(168,85,247,0.12)", badge: "rgba(168,85,247,0.1)", badgeBorder: "rgba(168,85,247,0.3)", badgeText: "#c084fc", statValue: "#c084fc", featureBg: "rgba(168,85,247,0.05)", primaryBtn: "linear-gradient(135deg,#a855f7,#7c3aed)", primaryShadow: "rgba(168,85,247,0.35)", progressBar: "#c084fc" },
     };
-    case "pro": return {
+    case "autopilot": return {
       emoji: "🚀",
       badge: { en: "AUTOPILOT LIMIT REACHED", ar: "وصلت لحد Autopilot" },
       headline: { en: "Incredible consistency!", ar: "ثبات مذهل!" },
@@ -171,7 +171,7 @@ export function TrialLimitModal({ isOpen, onClose, message, messageAr }: TrialLi
   const monthlyLimit = subscription?.monthlyLimit ?? null;
   const starterLimit = planConfig.starter?.tweetLimit ?? 300;
   const creatorLimit = planConfig.creator?.tweetLimit ?? 600;
-  const proLimit = planConfig.pro?.tweetLimit ?? 1500;
+  const proLimit = planConfig.autopilot?.tweetLimit ?? 1500;
   const content = getPlanContent(plan, tweetsUsed, monthlyLimit, starterLimit, creatorLimit, proLimit);
   const { accent } = content;
   const bodyText = isAr ? (messageAr || content.subline.ar) : (message || content.subline.en);
@@ -208,12 +208,12 @@ export function TrialLimitModal({ isOpen, onClose, message, messageAr }: TrialLi
       outlineBtn("starter", { en: `🔁 Renew Starter – ${getPriceDisplay("starter")}`, ar: `🔁 تجديد Starter – ${getPriceDisplay("starter")}` }),
     ];
     if (plan === "creator") return [
-      primaryBtn("pro", { en: `🚀 Upgrade to Autopilot – ${getPriceDisplay("pro")}`, ar: `🚀 الترقية إلى Autopilot – ${getPriceDisplay("pro")}` }),
+      primaryBtn("autopilot", { en: `🚀 Upgrade to Autopilot – ${getPriceDisplay("autopilot")}`, ar: `🚀 الترقية إلى Autopilot – ${getPriceDisplay("autopilot")}` }),
       outlineBtn("creator", { en: `🔁 Renew Creator – ${getPriceDisplay("creator")}`, ar: `🔁 تجديد Creator – ${getPriceDisplay("creator")}` }),
       linkBtn("starter", { en: `Switch to Starter – ${getPriceDisplay("starter")}`, ar: `التحويل إلى Starter – ${getPriceDisplay("starter")}` }),
     ];
     return [
-      primaryBtn("pro", { en: `🔁 Renew Autopilot – ${getPriceDisplay("pro")}`, ar: `🔁 تجديد Autopilot – ${getPriceDisplay("pro")}` }),
+      primaryBtn("autopilot", { en: `🔁 Renew Autopilot – ${getPriceDisplay("autopilot")}`, ar: `🔁 تجديد Autopilot – ${getPriceDisplay("autopilot")}` }),
       outlineBtn("creator", { en: `⬇️ Switch to Creator – ${getPriceDisplay("creator")}`, ar: `⬇️ التحويل إلى Creator – ${getPriceDisplay("creator")}` }),
     ];
   };

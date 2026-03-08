@@ -33,14 +33,14 @@ async function deleteUserAutomations(userId: string): Promise<void> {
 export function getPlanPrices(): { sar: Record<string, number>; usd: Record<string, number> } {
   return {
     sar: {
-      starter: Number(process.env.PRICE_STARTER_SAR ?? 55),
-      creator: Number(process.env.PRICE_CREATOR_SAR ?? 109),
-      pro:     Number(process.env.PRICE_PRO_SAR     ?? 259),
+      starter:  Number(process.env.PRICE_STARTER_SAR  ?? 55),
+      creator:  Number(process.env.PRICE_CREATOR_SAR  ?? 109),
+      autopilot: Number(process.env.PRICE_PRO_SAR     ?? 259),
     },
     usd: {
-      starter: Number(process.env.PRICE_STARTER_USD ?? 15),
-      creator: Number(process.env.PRICE_CREATOR_USD ?? 29),
-      pro:     Number(process.env.PRICE_PRO_USD     ?? 69),
+      starter:  Number(process.env.PRICE_STARTER_USD  ?? 15),
+      creator:  Number(process.env.PRICE_CREATOR_USD  ?? 29),
+      autopilot: Number(process.env.PRICE_PRO_USD     ?? 69),
     },
   };
 }
@@ -105,7 +105,7 @@ export const PLAN_TWEET_LIMITS: Record<string, number> = {
   free: 30,
   starter: 300,
   creator: 600,
-  pro: 1500,
+  autopilot: 1500,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -268,8 +268,8 @@ async function downgradeExpiredSubscription(userId: string): Promise<void> {
     .where(eq(users.id, userId));
   console.log(`[subscription] ⬇️ downgradeExpiredSubscription: user=${userId} → free (none)`);
   await pauseActiveAutomations(userId);
-  // Autopilot is Pro-only → delete all automations on downgrade from Pro
-  if (currentUser?.plan === "pro") {
+  // Autopilot is Pro-only → delete all automations on downgrade from Autopilot
+  if (currentUser?.plan === "autopilot") {
     await deleteUserAutomations(userId);
   }
 }
@@ -333,7 +333,7 @@ export async function checkTweetLimit(userId: string): Promise<{
   if (used >= limit) {
     const sLimit = PLAN_TWEET_LIMITS["starter"];
     const cLimit = PLAN_TWEET_LIMITS["creator"];
-    const pLimit = PLAN_TWEET_LIMITS["pro"];
+    const pLimit = PLAN_TWEET_LIMITS["autopilot"];
     const limitMessages: Record<string, { en: string; ar: string }> = {
       free: {
         en: `You've published ${used} tweets this month — a great start!\n\nUpgrade to Starter (${sLimit} tweets) or Creator (${cLimit} tweets) to keep going.`,
@@ -347,7 +347,7 @@ export async function checkTweetLimit(userId: string): Promise<{
         en: `You've published ${used} tweets this month — you're on fire!\n\nUpgrade to Autopilot for ${pLimit} tweets, or renew Creator for another ${cLimit} instantly.`,
         ar: `نشرت ${used} تغريدة هذا الشهر — أنت في قمة نشاطك!\n\nقم بالترقية إلى Autopilot للحصول على ${pLimit} تغريدة، أو جدّد Creator للحصول على ${cLimit} تغريدة أخرى فوراً.`,
       },
-      pro: {
+      autopilot: {
         en: `You've published ${used} tweets this month — incredible consistency.\n\nRenew now and unlock a fresh ${pLimit} tweets instantly.`,
         ar: `نشرت ${used} تغريدة هذا الشهر — ثبات مذهل.\n\nجدّد الآن واحصل على ${pLimit} تغريدة جديدة فوراً.`,
       },
@@ -376,7 +376,7 @@ export async function checkCanUseAdvancedScheduling(userId: string): Promise<{
   if (!user) return { allowed: false };
 
   const plan = user.plan ?? "free";
-  if (["creator", "pro"].includes(plan) && user.subscriptionStatus === "active") {
+  if (["creator", "autopilot"].includes(plan) && user.subscriptionStatus === "active") {
     return { allowed: true };
   }
 
@@ -398,15 +398,15 @@ export async function checkCanUseAutopilot(userId: string): Promise<{
   if (!user) return { allowed: false };
 
   const plan = user.plan ?? "free";
-  if (plan === "pro" && user.subscriptionStatus === "active") {
+  if (plan === "autopilot" && user.subscriptionStatus === "active") {
     return { allowed: true };
   }
 
   return {
     allowed: false,
     message: {
-      en: `Autopilot automation is available on the Autopilot plan ($${_usd()["pro"]}/month). Upgrade to automate your posts! 🚀`,
-      ar: `الأتمتة التلقائية متاحة في خطة Autopilot ($${_usd()["pro"]}/شهر). قم بالترقية لأتمتة تغريداتك! 🚀`,
+      en: `Autopilot automation is available on the Autopilot plan ($${_usd()["autopilot"]}/month). Upgrade to automate your posts! 🚀`,
+      ar: `الأتمتة التلقائية متاحة في خطة Autopilot ($${_usd()["autopilot"]}/شهر). قم بالترقية لأتمتة تغريداتك! 🚀`,
     },
   };
 }
@@ -423,7 +423,7 @@ export async function checkCanUseThreads(userId: string, requestedTweetCount?: n
   const plan = user.plan ?? "free";
 
   // Pro and Creator: unlimited threads
-  if (["creator", "pro"].includes(plan) && user.subscriptionStatus === "active") {
+  if (["creator", "autopilot"].includes(plan) && user.subscriptionStatus === "active") {
     return { allowed: true, maxTweets: 999 };
   }
 
@@ -462,8 +462,8 @@ export async function checkCanUseThreads(userId: string, requestedTweetCount?: n
   return {
     allowed: false,
     message: {
-      en: `Thread publishing is available on Creator ($${_usd()["creator"]}) and Autopilot ($${_usd()["pro"]}) plans.`,
-      ar: `نشر الثريدات متاح في خطتَي Creator ($${_usd()["creator"]}) وAutopilot ($${_usd()["pro"]}).`,
+      en: `Thread publishing is available on Creator ($${_usd()["creator"]}) and Autopilot ($${_usd()["autopilot"]}) plans.`,
+      ar: `نشر الثريدات متاح في خطتَي Creator ($${_usd()["creator"]}) وAutopilot ($${_usd()["autopilot"]}).`,
     },
   };
 }
@@ -546,8 +546,8 @@ export async function updateSubscriptionFromPaylink(
     `[paylink] ✅ ${eventType} | user=${userId} | plan=${plan} | amount=${meta.amount} SAR | reset=${shouldReset}`
   );
 
-  // If downgrading from Pro → delete all automations (Autopilot is Pro-only)
-  if (eventType === "plan_change" && user.plan === "pro" && plan !== "pro") {
+  // If downgrading from Autopilot → delete all automations (Autopilot plan only)
+  if (eventType === "plan_change" && user.plan === "autopilot" && plan !== "autopilot") {
     await deleteUserAutomations(userId);
   }
 }

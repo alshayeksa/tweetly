@@ -306,7 +306,7 @@ export default {
     trialBanner: "الترقية لتغريدات غير محدودة",
     expiredBanner: "انتهى اشتراكك. قم بالترقية للاستمرار.",
     freePlan: "مجاني",
-    proPlan: "Pro",
+    proPlan: "Autopilot",
     perMonth: "/شهر",
     upgrade: "الترقية إلى Pro ←",
     manage: "إدارة الاشتراك",
@@ -347,7 +347,7 @@ export default {
         f5: "✨ كتابة وإعادة كتابة بالذكاء الاصطناعي",
         f6: "تحسين المحتوى بالذكاء الاصطناعي",
       },
-      pro: {
+      autopilot: {
         description: "للمنشئين الذين يريدون نمواً آلياً.",
         tagline: "مصمم للمنشئين الذين يريدون نمواً ثابتاً على X بدون نشر يدوي.",
         ctaGuest: "انضم الآن",

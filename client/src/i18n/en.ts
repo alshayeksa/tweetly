@@ -306,7 +306,7 @@ export default {
     trialBanner: "Upgrade for unlimited tweets",
     expiredBanner: "Your subscription has expired. Upgrade to continue.",
     freePlan: "Free",
-    proPlan: "Pro",
+    proPlan: "Autopilot",
     perMonth: "/month",
     upgrade: "Upgrade to Pro →",
     manage: "Manage Subscription",
@@ -347,7 +347,7 @@ export default {
         f5: "✨ AI writing & rewriting",
         f6: "AI content optimization",
       },
-      pro: {
+      autopilot: {
         description: "For creators who want automated growth.",
         tagline: "Designed for creators who want consistent growth on X without manual posting.",
         ctaGuest: "Join Now",

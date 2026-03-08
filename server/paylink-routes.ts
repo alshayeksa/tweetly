@@ -26,7 +26,7 @@ const FETCH_TIMEOUT_MS = 15_000; // 15 seconds
 // Format: {userId}_{plan}_{[voucherCode_]timestamp}
 // Strategy: plan is always starter|creator|pro — find it, then split around it
 function parseOrderNumber(orderNumber: string): { userId: string; plan: string; ts: string; voucherCode: string | undefined } | null {
-  const VALID_PLANS = ["starter", "creator", "pro"];
+  const VALID_PLANS = ["starter", "creator", "autopilot"];
   for (const plan of VALID_PLANS) {
     const marker = `_${plan}_`;
     const idx = orderNumber.indexOf(marker);
@@ -170,7 +170,7 @@ export function registerPaylinkRoutes(app: Express) {
       res.json({
         starter: { sar: sar.starter, usd: usd.starter },
         creator: { sar: sar.creator, usd: usd.creator },
-        pro:     { sar: sar.pro,     usd: usd.pro     },
+        autopilot: { sar: sar.autopilot, usd: usd.autopilot },
       });
     } catch {
       res.status(500).json({ message: "Failed to fetch plan prices" });
@@ -224,8 +224,8 @@ export function registerPaylinkRoutes(app: Express) {
           usd: usd.creator ?? 29,
           sar: sar.creator ?? 109,
         },
-        pro: {
-          key: "pro",
+        autopilot: {
+          key: "autopilot",
           label: "Autopilot",
           tweetLimit: 1500,
           threadLimit: 999,
@@ -235,8 +235,8 @@ export function registerPaylinkRoutes(app: Express) {
           aiRewrite: true,
           aiToneTraining: true,
           prioritySupport: true,
-          usd: usd.pro ?? 69,
-          sar: sar.pro ?? 259,
+          usd: usd.autopilot ?? 69,
+          sar: sar.autopilot ?? 259,
         },
       });
     } catch {
@@ -296,7 +296,7 @@ export function registerPaylinkRoutes(app: Express) {
 
   // ── Create checkout invoice ────────────────────────────
   // POST /api/subscription/checkout
-  // Body: { plan: "starter" | "creator" | "pro", voucherCode?: string }
+  // Body: { plan: "starter" | "creator" | "autopilot", voucherCode?: string }
   app.post("/api/subscription/checkout", isAuthenticated, async (req: any, res) => {
     try {
       if (!process.env.PAYLINK_API_ID || !process.env.PAYLINK_SECRET_KEY) {
@@ -350,7 +350,7 @@ export function registerPaylinkRoutes(app: Express) {
       const planLabels: Record<string, string> = {
         starter: `Tweetly Starter – ${PLAN_TWEET_LIMITS["starter"]} تغريدة/شهر`,
         creator: `Tweetly Creator – ${PLAN_TWEET_LIMITS["creator"]} تغريدة/شهر`,
-        pro:     `Tweetly Autopilot – ${PLAN_TWEET_LIMITS["pro"]} تغريدة/شهر + أتمتة`,
+        autopilot: `Tweetly Autopilot – ${PLAN_TWEET_LIMITS["autopilot"]} تغريدة/شهر + أتمتة`,
       };
 
       const { url } = await createPaylinkInvoice({

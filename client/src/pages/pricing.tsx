@@ -20,7 +20,7 @@ export default function PricingPage() {
   const { plans: planConfig } = usePlanConfig();
   const [sarVisible, setSarVisible] = useState<string | null>(null);
 
-  const planRank: Record<string, number> = { free: 0, starter: 1, creator: 2, pro: 3 };
+  const planRank: Record<string, number> = { free: 0, starter: 1, creator: 2, autopilot: 3 };
   const getPlanLabel = (key: string) => planConfig[key]?.label ?? key;
   const getPlanTweetLimit = (key: string) => planConfig[key]?.tweetLimit ?? 0;
   const userPlanRank = planRank[subscription?.plan ?? "free"] ?? 0;
@@ -146,21 +146,21 @@ export default function PricingPage() {
       ctaSwitch: "⬇️ Switch to Creator",
     },
     {
-      key: "pro",
-      label: getPlanLabel("pro"),
-      price: `$${prices.pro?.usd ?? planConfig.pro?.usd ?? 69}`,
-      numericPrice: prices.pro?.usd ?? planConfig.pro?.usd ?? 69,
+      key: "autopilot",
+      label: getPlanLabel("autopilot"),
+      price: `$${prices.autopilot?.usd ?? planConfig.autopilot?.usd ?? 69}`,
+      numericPrice: prices.autopilot?.usd ?? planConfig.autopilot?.usd ?? 69,
       per: t("pricing.perMonth"),
       color: "text-violet-600",
       borderClass: "border-violet-200",
       badgeClass: "bg-violet-50 text-violet-700 border-violet-200",
-      description: t("pricing.plans.pro.description"),
-      tagline: t("pricing.plans.pro.tagline"),
+      description: t("pricing.plans.autopilot.description"),
+      tagline: t("pricing.plans.autopilot.tagline"),
       popular: false,
       isFree: false,
-      features: getPlanFeatures("pro"),
-      ctaGuest: t("pricing.plans.pro.ctaGuest"),
-      ctaUpgrade: t("pricing.plans.pro.ctaUpgrade"),
+      features: getPlanFeatures("autopilot"),
+      ctaGuest: t("pricing.plans.autopilot.ctaGuest"),
+      ctaUpgrade: t("pricing.plans.autopilot.ctaUpgrade"),
       ctaSwitch: "⬇️ Switch to Autopilot",
     },
   ];

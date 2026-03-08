@@ -485,7 +485,7 @@ export default function AutoTweetsPage() {
           disabled={xNotConnected}
           onClick={() => {
             const plan = subscription?.plan ?? "free";
-            if (plan !== "pro") {
+            if (plan !== "autopilot") {
               setShowProModal(true);
               return;
             }
@@ -680,7 +680,7 @@ export default function AutoTweetsPage() {
             <Button
               onClick={() => {
                 const plan = subscription?.plan ?? "free";
-                if (plan !== "pro") {
+                if (plan !== "autopilot") {
                   setShowProModal(true);
                   return;
                 }
@@ -739,7 +739,7 @@ export default function AutoTweetsPage() {
             {/* Stats */}
             <div className="mx-6 mb-3 grid grid-cols-3 gap-2 rounded-xl p-3"
               style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
-              {[{ value: "24/7", label: "autopilot" }, { value: `${planConfig.pro?.tweetLimit ?? 1500}`, label: "tweets/mo" }, { value: "∞", label: "automations" }].map((s) => (
+              {[{ value: "24/7", label: "autopilot" }, { value: `${planConfig.autopilot?.tweetLimit ?? 1500}`, label: "tweets/mo" }, { value: "∞", label: "automations" }].map((s) => (
                 <div key={s.label} className="text-center">
                   <div className="text-base font-bold" style={{ color: "#fbbf24" }}>{s.value}</div>
                   <div className="text-xs text-zinc-600">{s.label}</div>
@@ -751,7 +751,7 @@ export default function AutoTweetsPage() {
             <div className="px-6 mb-4 space-y-1.5">
               <p className="text-xs font-semibold text-zinc-400 mb-2">{isAr ? "Autopilot يتيح لك:" : "Autopilot unlocks:"}</p>
               {[
-                { icon: "⚡", en: `${planConfig.pro?.tweetLimit ?? 1500} tweets per month`, ar: `${planConfig.pro?.tweetLimit ?? 1500} تغريدة شهرياً` },
+                { icon: "⚡", en: `${planConfig.autopilot?.tweetLimit ?? 1500} tweets per month`, ar: `${planConfig.autopilot?.tweetLimit ?? 1500} تغريدة شهرياً` },
                 { icon: "🤖", en: "Auto-generate & publish 24/7", ar: "توليد ونشر تلقائي على مدار الساعة" },
                 { icon: "🎯", en: "AI picks best posting times", ar: "الذكاء الاصطناعي يختار أفضل وقت للنشر" },
                 { icon: "📈", en: "Grow your account while you sleep", ar: "نمو حسابك وأنت نائم" },
@@ -776,14 +776,14 @@ export default function AutoTweetsPage() {
                       method: "POST",
                       credentials: "include",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ plan: "pro" }),
+                      body: JSON.stringify({ plan: "autopilot" }),
                     });
                     const data = await res.json();
                     if (data.url) window.location.href = data.url;
                   } catch { }
                 }}
               >
-                🚀 {isAr ? `ابدأ Autopilot — ${planConfig.pro?.sar ?? 259} ر.س/شهر` : `Start Autopilot — $${planConfig.pro?.usd ?? 69}/month`}
+                🚀 {isAr ? `ابدأ Autopilot — ${planConfig.autopilot?.sar ?? 259} ر.س/شهر` : `Start Autopilot — $${planConfig.autopilot?.usd ?? 69}/month`}
               </button>
               <button onClick={() => setShowProModal(false)} className="w-full text-xs text-zinc-600 hover:text-zinc-400 py-2 transition-colors">
                 {isAr ? "ربما لاحقاً" : "Maybe Later"}

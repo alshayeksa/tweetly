@@ -314,12 +314,12 @@ export async function runMigrations(): Promise<void> {
     // Seed default prices (idempotent — only inserts if row does not exist)
     await client.query(`
       INSERT INTO plan_prices (plan, currency, price) VALUES
-        ('starter', 'SAR', ${process.env.PAYLINK_PRICE_STARTER  ?? 69}),
-        ('creator', 'SAR', ${process.env.PAYLINK_PRICE_CREATOR  ?? 149}),
-        ('pro',     'SAR', ${process.env.PAYLINK_PRICE_PRO      ?? 299}),
-        ('starter', 'USD', ${process.env.PLAN_PRICE_USD_STARTER ?? 19}),
-        ('creator', 'USD', ${process.env.PLAN_PRICE_USD_CREATOR ?? 39}),
-        ('pro',     'USD', ${process.env.PLAN_PRICE_USD_PRO     ?? 79})
+        ('starter',   'SAR', ${process.env.PAYLINK_PRICE_STARTER  ?? 69}),
+        ('creator',   'SAR', ${process.env.PAYLINK_PRICE_CREATOR  ?? 149}),
+        ('autopilot', 'SAR', ${process.env.PAYLINK_PRICE_PRO      ?? 299}),
+        ('starter',   'USD', ${process.env.PLAN_PRICE_USD_STARTER ?? 19}),
+        ('creator',   'USD', ${process.env.PLAN_PRICE_USD_CREATOR ?? 39}),
+        ('autopilot', 'USD', ${process.env.PLAN_PRICE_USD_PRO     ?? 79})
       ON CONFLICT (plan, currency) DO NOTHING;
     `);
 
@@ -350,6 +350,12 @@ export async function runMigrations(): Promise<void> {
       CREATE INDEX IF NOT EXISTS login_history_created_at_idx ON login_history(created_at DESC);
     `);
 
+    // ── Rename plan "pro" → "autopilot" in all tables (idempotent) ──────────
+    await client.query(`UPDATE users                SET plan = 'autopilot' WHERE plan = 'pro';`);
+    await client.query(`UPDATE subscription_renewals SET plan = 'autopilot' WHERE plan = 'pro';`);
+    await client.query(`
+      UPDATE plan_prices SET plan = 'autopilot' WHERE plan = 'pro';
+    `);
     console.log("[migrate] ✅ Schema up to date");
   } catch (err) {
     console.error("[migrate] ❌ Migration failed:", err);

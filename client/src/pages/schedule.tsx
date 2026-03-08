@@ -413,7 +413,7 @@ export default function SchedulePage() {
               <Button
                 onClick={() => {
                   const plan = subscription?.plan ?? "free";
-                  if (!["creator","pro"].includes(plan)) {
+                  if (!["creator","autopilot"].includes(plan)) {
                     setLimitMessage({
                       en: `AI schedule generation requires the Creator plan or above. You're on ${plan === "free" ? "Free" : "Starter"}.`,
                       ar: `توليد الجدولة بالذكاء الاصطناعي يتطلب خطة Creator أو أعلى. أنت على خطة ${plan === "free" ? "Free" : "Starter"}.`,

@@ -36,8 +36,8 @@ const FALLBACK: PlansConfig = {
     aiRewrite: true, aiToneTraining: false, prioritySupport: false,
     usd: 29, sar: 109,
   },
-  pro: {
-    key: "pro", label: "Autopilot", tweetLimit: 1500, threadLimit: 999,
+  autopilot: {
+    key: "autopilot", label: "Autopilot", tweetLimit: 1500, threadLimit: 999,
     autopilot: true, advancedScheduling: true, aiWrite: true,
     aiRewrite: true, aiToneTraining: true, prioritySupport: true,
     usd: 69, sar: 259,

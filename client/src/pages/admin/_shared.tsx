@@ -54,7 +54,7 @@ export interface AdminUser {
 }
 
 function planColor(plan: string): "default" | "secondary" | "outline" | "destructive" {
-  if (plan === "pro") return "destructive";
+  if (plan === "autopilot") return "destructive";
   if (plan === "creator") return "default";
   if (plan === "starter") return "secondary";
   return "outline";
@@ -358,7 +358,7 @@ export function UsersTable({
                     <SelectItem value="free">free</SelectItem>
                     <SelectItem value="starter">starter</SelectItem>
                     <SelectItem value="creator">creator</SelectItem>
-                    <SelectItem value="pro">pro</SelectItem>
+                    <SelectItem value="autopilot">autopilot</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

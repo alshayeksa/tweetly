@@ -286,13 +286,13 @@ export default function SettingsPage() {
                           t("pricing.plans.creator.f4"),
                           t("pricing.plans.creator.f5"),
                         ],
-                        pro: [
-                          t("pricing.plans.pro.f1"),
-                          t("pricing.plans.pro.f2"),
-                          t("pricing.plans.pro.f3"),
-                          t("pricing.plans.pro.f4"),
-                          t("pricing.plans.pro.f5"),
-                          t("pricing.plans.pro.f6"),
+                        autopilot: [
+                          t("pricing.plans.autopilot.f1"),
+                          t("pricing.plans.autopilot.f2"),
+                          t("pricing.plans.autopilot.f3"),
+                          t("pricing.plans.autopilot.f4"),
+                          t("pricing.plans.autopilot.f5"),
+                          t("pricing.plans.autopilot.f6"),
                         ],
                       } as Record<string, string[]>)[subscription.plan]?.map((feature, i) => (
                         <li key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">

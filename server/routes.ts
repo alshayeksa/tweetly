@@ -25,7 +25,7 @@ const publicApiLimiter = rateLimit({
 
 // ── Per-user daily AI generation rate limiter ─────────────────────────────
 const DAILY_GEN_LIMITS: Record<string, number> = {
-  free: 10, starter: 30, creator: 60, pro: 120,
+  free: 10, starter: 30, creator: 60, autopilot: 120,
 };
 const genCallTracker = new Map<string, { count: number; resetAt: number }>();
 
@@ -1343,7 +1343,7 @@ Example: ["Main Tweet (100-150 chars)", "Sub Tweet 1 (100-150 chars)", "Sub Twee
           message: autopilotCheck.message?.en,
           messageAr: autopilotCheck.message?.ar,
           code: "PLAN_UPGRADE_REQUIRED",
-          requiredPlan: "pro",
+          requiredPlan: "autopilot",
         });
       }
 
@@ -1380,7 +1380,7 @@ Example: ["Main Tweet (100-150 chars)", "Sub Tweet 1 (100-150 chars)", "Sub Twee
             message: autopilotCheck.message?.en,
             messageAr: autopilotCheck.message?.ar,
             code: "PLAN_UPGRADE_REQUIRED",
-            requiredPlan: "pro",
+            requiredPlan: "autopilot",
           });
         }
         const limitCheck = await checkTweetLimit(userId);

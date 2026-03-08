@@ -7,7 +7,7 @@ interface SubscriptionInfo {
   isTrial: boolean;
   isPaid: boolean;
   isFree: boolean;
-  plan: string; // "free" | "starter" | "creator" | "pro"
+  plan: string; // "free" | "starter" | "creator" | "autopilot"
   daysLeft: number | null;
   trialEndsAt: string | null;
   subscriptionEndsAt: string | null;

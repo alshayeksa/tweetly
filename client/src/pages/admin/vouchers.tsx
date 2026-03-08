@@ -406,7 +406,7 @@ export default function AdminVouchersPage() {
                   <SelectItem value="all">All plans</SelectItem>
                   <SelectItem value="starter">Starter</SelectItem>
                   <SelectItem value="creator">Creator</SelectItem>
-                  <SelectItem value="pro">Pro</SelectItem>
+                  <SelectItem value="autopilot">Autopilot</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -469,7 +469,7 @@ export default function AdminVouchersPage() {
                     <SelectItem value="all">All plans</SelectItem>
                     <SelectItem value="starter">Starter</SelectItem>
                     <SelectItem value="creator">Creator</SelectItem>
-                    <SelectItem value="pro">Pro</SelectItem>
+                    <SelectItem value="autopilot">Autopilot</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

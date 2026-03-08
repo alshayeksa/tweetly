@@ -116,7 +116,7 @@ export function AppSidebar() {
           free: isAr ? "مجاني" : "Free",
           starter: "Starter",
           creator: "Creator",
-          pro: "Pro",
+          autopilot: "Autopilot",
         };
         const label = planLabel[subscription.plan] ?? subscription.plan;
         const showUsage = subscription.monthlyLimit !== null;

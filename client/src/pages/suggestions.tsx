@@ -23,6 +23,7 @@ import type { Suggestion } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { TweetCard } from "@/components/TweetCard";
 import { TrialLimitModal } from "@/components/TrialLimitModal";
+import { DailyLimitModal } from "@/components/DailyLimitModal";
 import { XConnectionBanner } from "@/components/XConnectionBanner";
 import { PromptTemplatesModal } from "@/components/PromptTemplatesModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +40,8 @@ export default function SuggestionsPage() {
   const [showTrialLimitModal, setShowTrialLimitModal] = useState(false);
   const [trialLimitMessage, setTrialLimitMessage] = useState("");
   const [trialLimitMessageAr, setTrialLimitMessageAr] = useState("");
+  const [showDailyLimitModal, setShowDailyLimitModal] = useState(false);
+  const [dailyLimitRetryAfterMs, setDailyLimitRetryAfterMs] = useState<number | undefined>();
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const { t, i18n } = useTranslation();
   const isAr = i18n.language === "ar";
@@ -81,9 +84,8 @@ export default function SuggestionsPage() {
         setTrialLimitMessageAr(err.messageAr || err.message);
         setShowTrialLimitModal(true);
       } else if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
-        setTrialLimitMessage(err.message);
-        setTrialLimitMessageAr(err.messageAr || err.message);
-        setShowTrialLimitModal(true);
+        setDailyLimitRetryAfterMs(err.retryAfterMs);
+        setShowDailyLimitModal(true);
       } else {
         const msg = isAr ? (err.messageAr || err.message) : (err.messageEn || err.message);
         toast({ title: msg || t("common.error"), variant: "destructive" });
@@ -107,9 +109,8 @@ export default function SuggestionsPage() {
         setTrialLimitMessageAr(err.messageAr || err.message);
         setShowTrialLimitModal(true);
       } else if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
-        setTrialLimitMessage(err.messageEn || err.message);
-        setTrialLimitMessageAr(err.messageAr || err.message);
-        setShowTrialLimitModal(true);
+        setDailyLimitRetryAfterMs(err.retryAfterMs);
+        setShowDailyLimitModal(true);
       } else {
         toast({ title: t("common.error"), variant: "destructive" });
       }
@@ -398,6 +399,11 @@ export default function SuggestionsPage() {
         onClose={() => setShowTrialLimitModal(false)}
         message={trialLimitMessage}
         messageAr={trialLimitMessageAr}
+      />
+      <DailyLimitModal
+        isOpen={showDailyLimitModal}
+        onClose={() => setShowDailyLimitModal(false)}
+        retryAfterMs={dailyLimitRetryAfterMs}
       />
 
       <PromptTemplatesModal

@@ -20,6 +20,7 @@ import { useXReconnectToast } from "@/hooks/use-x-reconnect-toast";
 import { useSubscription } from "@/hooks/use-subscription";
 import { usePlanConfig } from "@/hooks/use-plan-config";
 import { TrialLimitModal } from "@/components/TrialLimitModal";
+import { DailyLimitModal } from "@/components/DailyLimitModal";
 import { XConnectionBanner } from "@/components/XConnectionBanner";
 import { PromptTemplatesModal } from "@/components/PromptTemplatesModal";
 import type { Suggestion } from "@shared/schema";
@@ -34,6 +35,8 @@ export default function ThreadsPage() {
   const [showTrialLimitModal, setShowTrialLimitModal] = useState(false);
   const [trialLimitMessage, setTrialLimitMessage] = useState("");
   const [trialLimitMessageAr, setTrialLimitMessageAr] = useState("");
+  const [showDailyLimitModal, setShowDailyLimitModal] = useState(false);
+  const [dailyLimitRetryAfterMs, setDailyLimitRetryAfterMs] = useState<number | undefined>();
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
@@ -85,9 +88,8 @@ export default function ThreadsPage() {
         setTrialLimitMessageAr(err.messageAr || err.message);
         setShowTrialLimitModal(true);
       } else if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
-        setTrialLimitMessage(err.message);
-        setTrialLimitMessageAr(err.messageAr || err.message);
-        setShowTrialLimitModal(true);
+        setDailyLimitRetryAfterMs(err.retryAfterMs);
+        setShowDailyLimitModal(true);
       } else {
         toast({ title: err.message || "Failed to generate thread", variant: "destructive" });
       }
@@ -105,9 +107,8 @@ export default function ThreadsPage() {
     },
     onError: (err: any) => {
       if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
-        setTrialLimitMessage(err.message);
-        setTrialLimitMessageAr(err.messageAr || err.message);
-        setShowTrialLimitModal(true);
+        setDailyLimitRetryAfterMs(err.retryAfterMs);
+        setShowDailyLimitModal(true);
       } else {
         toast({ title: "Failed to improve prompt", variant: "destructive" });
       }
@@ -394,6 +395,11 @@ export default function ThreadsPage() {
       onClose={() => setShowTrialLimitModal(false)}
       message={trialLimitMessage}
       messageAr={trialLimitMessageAr}
+    />
+    <DailyLimitModal
+      isOpen={showDailyLimitModal}
+      onClose={() => setShowDailyLimitModal(false)}
+      retryAfterMs={dailyLimitRetryAfterMs}
     />
     <PromptTemplatesModal
       open={showTemplatesModal}

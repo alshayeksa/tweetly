@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/use-subscription";
 import { usePlanConfig } from "@/hooks/use-plan-config";
 import { TrialLimitModal } from "@/components/TrialLimitModal";
+import { DailyLimitModal } from "@/components/DailyLimitModal";
 import type { ScheduledTweet } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { XConnectionBanner } from "@/components/XConnectionBanner";
@@ -205,6 +206,8 @@ export default function SchedulePage() {
   const [mode, setMode] = useState<"manual" | "ai">("manual");
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitMessage, setLimitMessage] = useState<{en:string;ar:string} | undefined>();
+  const [showDailyLimitModal, setShowDailyLimitModal] = useState(false);
+  const [dailyLimitRetryAfterMs, setDailyLimitRetryAfterMs] = useState<number | undefined>();
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [content, setContent] = useState("");
   const [date, setDate] = useState<Date | undefined>();
@@ -271,13 +274,13 @@ export default function SchedulePage() {
       setGeneratedItems(items);
       toast({ title: isAr ? `تم توليد ${items.length} تغريدات` : `Generated ${items.length} tweets` });
     },
-    onError: (err: any) => { if (err.code === "TWEET_LIMIT_REACHED" || err.code === "TRIAL_TWEET_LIMIT_EXCEEDED" || err.code === "PLAN_UPGRADE_REQUIRED" || err.status === 402 || err.status === 403) { setLimitMessage({ en: err.messageEn || err.message, ar: err.messageAr || err.message }); setShowLimitModal(true); } else if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) { setLimitMessage({ en: err.message, ar: err.messageAr || err.message }); setShowLimitModal(true); } else { toast({ title: err.message || "Generation failed", variant: "destructive" }); } },
+    onError: (err: any) => { if (err.code === "TWEET_LIMIT_REACHED" || err.code === "TRIAL_TWEET_LIMIT_EXCEEDED" || err.code === "PLAN_UPGRADE_REQUIRED" || err.status === 402 || err.status === 403) { setLimitMessage({ en: err.messageEn || err.message, ar: err.messageAr || err.message }); setShowLimitModal(true); } else if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) { setDailyLimitRetryAfterMs(err.retryAfterMs); setShowDailyLimitModal(true); } else { toast({ title: err.message || "Generation failed", variant: "destructive" }); } },
   });
 
   const improveMutation = useMutation({
     mutationFn: async () => { const res = await apiRequest("POST", "/api/prompt/improve", { prompt: promptText }); return res.json() as Promise<{ improvedPrompt: string }>; },
     onSuccess: (data) => { setPromptText(data.improvedPrompt); toast({ title: isAr ? "تم تحسين الطلب" : "Prompt improved" }); },
-    onError: (err: any) => { if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) { setLimitMessage({ en: err.message, ar: err.messageAr || err.message }); setShowLimitModal(true); } else { toast({ title: "Improve failed", variant: "destructive" }); } },
+    onError: (err: any) => { if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) { setDailyLimitRetryAfterMs(err.retryAfterMs); setShowDailyLimitModal(true); } else { toast({ title: "Improve failed", variant: "destructive" }); } },
   });
 
   async function scheduleGeneratedItem(localId: string) {
@@ -480,6 +483,11 @@ export default function SchedulePage() {
         onClose={() => setShowLimitModal(false)}
         message={limitMessage?.en}
         messageAr={limitMessage?.ar}
+      />
+      <DailyLimitModal
+        isOpen={showDailyLimitModal}
+        onClose={() => setShowDailyLimitModal(false)}
+        retryAfterMs={dailyLimitRetryAfterMs}
       />
       <PromptTemplatesModal
         open={showTemplatesModal}

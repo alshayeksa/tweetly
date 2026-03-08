@@ -11,6 +11,7 @@ async function throwIfResNotOk(res: Response) {
       err.code = json.code;
       err.messageAr = json.messageAr;
       err.messageEn = json.message;
+      err.retryAfterMs = json.retryAfterMs;
       throw err;
     } catch (parseErr: any) {
       if (parseErr.status) throw parseErr; // re-throw our custom error

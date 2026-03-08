@@ -408,6 +408,7 @@ ${needsRealTimeSearch ? "- مبنية على أخبار حقيقية موثقة\
           prompt: userPrompt.trim().substring(0, 500),
         }));
         const createdSuggestions = await storage.createSuggestions(userId, suggestionData);
+        await incrementTweetsUsed(userId, createdSuggestions.length);
         await storage.logActivity(userId, "generated", "manual", undefined, `Generated ${createdSuggestions.length} manual tweets — "${userPrompt.trim().substring(0, 100)}"`);
         return res.json(createdSuggestions);
       }
@@ -481,6 +482,7 @@ Now generate exactly ${tweetCount} tweets based strictly on the real news above.
       }));
 
       const createdSuggestions = await storage.createSuggestions(userId, suggestionData);
+      await incrementTweetsUsed(userId, createdSuggestions.length);
       await storage.logActivity(
         userId,
         "generated",

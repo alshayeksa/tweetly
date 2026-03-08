@@ -695,6 +695,7 @@ export default function AutoTweetsPage() {
                 }
               }}
               data-testid="button-create-first-automation"
+              disabled={xNotConnected}
             >
               {t("autoTweets.createFirst")}
             </Button>

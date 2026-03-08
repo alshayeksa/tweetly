@@ -100,8 +100,19 @@ export default function SuggestionsPage() {
       setPromptText(data.improvedPrompt);
       toast({ title: t("suggestions.improvePrompt") });
     },
-    onError: () => {
-      toast({ title: t("common.error"), variant: "destructive" });
+    onError: (err: any) => {
+      const isLimitError = (err.code === "TWEET_LIMIT_REACHED" || err.code === "TRIAL_TWEET_LIMIT_EXCEEDED" || err.code === "PLAN_UPGRADE_REQUIRED") || err.status === 402 || err.status === 403;
+      if (isLimitError) {
+        setTrialLimitMessage(err.messageEn || err.message);
+        setTrialLimitMessageAr(err.messageAr || err.message);
+        setShowTrialLimitModal(true);
+      } else if (err.code === "GENERATION_RATE_LIMIT" || err.status === 429) {
+        setTrialLimitMessage(err.messageEn || err.message);
+        setTrialLimitMessageAr(err.messageAr || err.message);
+        setShowTrialLimitModal(true);
+      } else {
+        toast({ title: t("common.error"), variant: "destructive" });
+      }
     },
   });
 

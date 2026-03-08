@@ -414,18 +414,7 @@ export default function SchedulePage() {
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <Button
-                onClick={() => {
-                  const plan = subscription?.plan ?? "free";
-                  if (!["creator","autopilot"].includes(plan)) {
-                    setLimitMessage({
-                      en: `AI schedule generation requires the Creator plan or above. You're on ${plan === "free" ? "Free" : "Starter"}.`,
-                      ar: `توليد الجدولة بالذكاء الاصطناعي يتطلب خطة Creator أو أعلى. أنت على خطة ${plan === "free" ? "Free" : "Starter"}.`,
-                    });
-                    setShowLimitModal(true);
-                    return;
-                  }
-                  generateMutation.mutate();
-                }}
+                onClick={() => generateMutation.mutate()}
                 disabled={!promptText.trim() || generateMutation.isPending}
               >
                 {generateMutation.isPending ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />{isAr ? "جاري التوليد..." : "Generating..."}</> : <><Sparkles className="w-4 h-4 mr-1" />{isAr ? "توليد" : "Generate"}</>}

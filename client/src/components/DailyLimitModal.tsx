@@ -9,15 +9,20 @@ interface DailyLimitModalProps {
   retryAfterMs?: number;
 }
 
-function getHoursUntilReset(retryAfterMs?: number): number {
-  if (retryAfterMs && retryAfterMs > 0) {
-    return Math.ceil(retryAfterMs / (1000 * 60 * 60));
-  }
-  // Fallback: compute from time to next midnight UTC
-  const now = new Date();
+function getResetInfo(retryAfterMs?: number): { hours: number; resetTimeUTC: string } {
   const midnight = new Date();
   midnight.setUTCHours(24, 0, 0, 0);
-  return Math.ceil((midnight.getTime() - now.getTime()) / (1000 * 60 * 60));
+  const now = Date.now();
+  const msUntil = retryAfterMs && retryAfterMs > 0 ? retryAfterMs : midnight.getTime() - now;
+  const hours = Math.ceil(msUntil / (1000 * 60 * 60));
+  // Format midnight UTC as "12:00 AM UTC"
+  const resetTime = new Date(now + msUntil);
+  const h = resetTime.getUTCHours();
+  const m = resetTime.getUTCMinutes().toString().padStart(2, "0");
+  const ampm = h < 12 ? "AM" : "PM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const resetTimeUTC = `${h12}:${m} ${ampm} UTC`;
+  return { hours, resetTimeUTC };
 }
 
 const accent = {
@@ -41,7 +46,7 @@ export function DailyLimitModal({ isOpen, onClose, retryAfterMs }: DailyLimitMod
 
   if (!isVisible) return null;
 
-  const hours = getHoursUntilReset(retryAfterMs);
+  const { hours, resetTimeUTC } = getResetInfo(retryAfterMs);
   const handleClose = () => { setIsVisible(false); onClose(); };
   const handleUpgrade = () => { handleClose(); navigate("/pricing"); };
 
@@ -98,6 +103,9 @@ export function DailyLimitModal({ isOpen, onClose, retryAfterMs }: DailyLimitMod
           </div>
           <div className="text-xs text-zinc-500 mt-0.5">
             {isAr ? "حتى إعادة الضبط" : "until reset"}
+          </div>
+          <div className="text-xs mt-1.5" style={{ color: accent.badgeText }}>
+            {resetTimeUTC}
           </div>
         </div>
 

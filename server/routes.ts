@@ -32,7 +32,7 @@ import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { registerPaylinkRoutes } from "./paylink-routes";
 import { registerPromptTemplatesRoutes } from "./prompt-templates-routes";
-import { isSubscriptionActive, startTrial, checkTweetLimit, incrementTweetsUsed, checkCanUseAutopilot, checkCanUseThreads, checkCanUseAdvancedScheduling, updateSubscriptionFromPaylink } from "./subscription";
+import { isSubscriptionActive, startTrial, checkTweetLimit, incrementTweetsUsed, checkCanUseAutopilot, checkCanUseThreads, checkCanUseAdvancedScheduling } from "./subscription";
 import { getAiProvider, improvePromptText, setAiProvider } from "./ai-provider";
 
 const gemini = new GoogleGenAI({
@@ -205,76 +205,6 @@ export async function registerRoutes(
 ): Promise<Server> {
   await setupAuth(app);
   registerAuthRoutes(app);
-
-  // ── Paylink Webhook (inline for reliability) ──────────────────────────────
-  app.post("/api/webhooks/paylink",
-    (req: any, _res: any, next: any) => {
-      // Support both JSON and urlencoded payloads from Paylink
-      if (req.headers["content-type"]?.includes("application/x-www-form-urlencoded")) {
-        let data = "";
-        req.on("data", (chunk: any) => { data += chunk; });
-        req.on("end", () => {
-          try {
-            const params = new URLSearchParams(data);
-            req.body = Object.fromEntries(params.entries());
-          } catch { req.body = {}; }
-          next();
-        });
-      } else {
-        next();
-      }
-    },
-    async (req: any, res) => {
-    try {
-      const headerSecret = process.env.PAYLINK_WEBHOOK_SECRET;
-      if (headerSecret) {
-        const incoming = req.headers["x-paylink-secret"] || req.headers["x-webhook-secret"];
-        if (incoming !== headerSecret) {
-          console.warn("[paylink] Webhook: invalid secret header");
-          return res.status(401).json({ message: "Unauthorized" });
-        }
-      }
-
-      const body = req.body;
-      const orderStatus: string = body?.orderStatus ?? "";
-      const orderNumber: string = body?.merchantOrderNumber ?? body?.orderNumber ?? "";
-      const transactionNo: string = body?.transactionNo ?? "";
-      const amount: number = Number(body?.amount ?? 0);
-
-      console.log(`[paylink] Webhook received: status=${orderStatus} order=${orderNumber}`);
-
-      if (orderStatus !== "Paid") {
-        return res.json({ received: true, skipped: true });
-      }
-
-      // Parse orderNumber: "{userId}_{plan}_{timestamp}"
-      const parts = orderNumber.split("_");
-      const userId = parts[0];
-      const plan = (parts[1] ?? "starter").toLowerCase();
-
-      if (!userId) {
-        console.error("[paylink] Cannot extract userId from orderNumber:", orderNumber);
-        return res.status(400).json({ message: "Invalid orderNumber" });
-      }
-
-      const now = new Date();
-      const periodStart = now;
-      const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-      await updateSubscriptionFromPaylink(userId, plan, periodStart, periodEnd, {
-        transactionNo,
-        orderNumber,
-        amount,
-        rawPayload: body,
-      });
-
-      console.log(`[paylink] ✅ Payment activated: user=${userId} plan=${plan} amount=${amount} SAR`);
-      res.json({ received: true });
-    } catch (err: any) {
-      console.error("[paylink] Webhook error:", err);
-      res.status(500).json({ message: "Webhook handler failed" });
-    }
-  });
 
   registerPaylinkRoutes(app);
   registerPromptTemplatesRoutes(app);
